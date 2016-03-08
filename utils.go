@@ -345,7 +345,7 @@ func FromNativeValue(nv reflect.Value, destType reflect.Type, subtag string) (v 
 		return dest, nil
 
 	case reflect.Ptr:
-		if !nv.IsValid() {
+		if !nv.IsValid() || nv.IsNil() {
 			return nv, nil
 		}
 		innerVal, err := FromNativeValue(nv, destType.Elem(), subtag)

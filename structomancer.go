@@ -44,7 +44,7 @@ func (z *Structomancer) GetFieldValue(aStruct interface{}, fnickname string) ref
 
 	fname := z.Field(fnickname).Name()
 	v := reflect.ValueOf(aStruct)
-	if v.Kind() == reflect.Ptr && !v.Elem().IsValid() {
+	if v.Kind() == reflect.Ptr && (!v.Elem().IsValid() || v.Elem().IsNil()) {
 		panic("Cannot call .GetField(nil, ...)")
 	}
 
