@@ -69,7 +69,7 @@ You might find that you need to set up custom serializer/deserializer functions 
 
 Doing so is easy:
 
-```
+```go
 type IFooer interface{ Foo() }
 
 type Blah struct {
