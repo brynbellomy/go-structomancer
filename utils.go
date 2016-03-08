@@ -251,6 +251,11 @@ func FromNativeValue(nv reflect.Value, destType reflect.Type, subtag string) (v 
 		reflect.Complex64,
 		reflect.Complex128,
 		reflect.String:
+
+		if nv.Kind() == reflect.Interface {
+			nv = reflect.ValueOf(nv.Interface())
+		}
+
 		if nv.Type() == destType {
 			return nv, nil
 		} else if nv.Type().ConvertibleTo(destType) {

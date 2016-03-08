@@ -3,7 +3,7 @@ package structomancer_test
 import (
 	"reflect"
 
-	"github.com/listenonrepeat/backend/common/structomancer"
+	"github.com/brynbellomy/go-structomancer"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -40,18 +40,48 @@ func (i InnerStruct) String() string {
 }
 
 var _ = Describe("Structomancer", func() {
+
 	Context("when .GetFieldValue is called", func() {
+		It("should serialize a struct field value to the appropriate native type", func() {
+			z := structomancer.New(&Keith{}, "xyzzy")
+			x := &Keith{Name: Name("keith")}
+
+			fv, err := z.GetFieldValue(x, "name")
+			if err != nil {
+				Fail(err.Error())
+			}
+
+			Expect(fv.Interface()).To(Equal("keith"))
+		})
+
 		Context("with a nil struct argument", func() {
-			It("should panic", func() {
+			It("should return an error", func() {
 				z := structomancer.New(&Keith{}, "xyzzy")
 
 				var aStruct *Keith
 				type IBlah interface{}
 				var anInterface IBlah = aStruct
 
-				Expect(func() { z.GetFieldValue(aStruct, "name") }).To(Panic())
-				Expect(func() { z.GetFieldValue(anInterface, "name") }).To(Panic())
+				_, err := z.GetFieldValue(aStruct, "name")
+				Expect(err).To(Not(BeNil()))
+
+				_, err = z.GetFieldValue(anInterface, "name")
+				Expect(err).To(Not(BeNil()))
 			})
+		})
+	})
+
+	Context("when .SetFieldValue is called", func() {
+		It("should deserialize a native value to the type of the given struct field", func() {
+			z := structomancer.New(&Keith{}, "xyzzy")
+			x := &Keith{}
+
+			err := z.SetFieldValue(x, "name", reflect.ValueOf("keith"))
+			if err != nil {
+				Fail(err.Error())
+			}
+
+			Expect(x.Name).To(Equal(Name("keith")))
 		})
 	})
 

@@ -3,7 +3,7 @@ package structomancer_test
 import (
 	"reflect"
 
-	"github.com/listenonrepeat/backend/common/structomancer"
+	"github.com/brynbellomy/go-structomancer"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
