@@ -215,8 +215,20 @@ func ToNativeValue(v reflect.Value, subtag string) (nv reflect.Value, err error)
 		}
 		return reflect.ValueOf(m), nil
 
-	case reflect.Ptr,
-		reflect.Interface:
+	case reflect.Ptr:
+		if !v.IsValid() || v.IsNil() {
+			return v, nil
+		}
+
+		// we simply collapse pointers when converting to native values
+		innerVal, err := ToNativeValue(v.Elem(), subtag)
+		if err != nil {
+			return reflect.Value{}, err
+		}
+		return innerVal, nil
+
+	case reflect.Interface:
+		// @@TODO?
 		return v, nil
 
 	case reflect.Func,
