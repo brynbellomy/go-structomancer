@@ -152,7 +152,7 @@ func (z *Structomancer) StructToMap(aStruct interface{}) (map[string]interface{}
 			continue
 		}
 
-		rval, err := z.GetFieldValue(aStruct, field.SerializedName())
+		rval, err := z.GetFieldValue(aStruct, fname)
 		if err != nil {
 			return nil, err
 		}
