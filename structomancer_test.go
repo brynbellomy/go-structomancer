@@ -19,6 +19,7 @@ type (
 		StructSlice    []InnerStruct          `xyzzy:"structSlice, @tag=weezy"`
 		InterfaceSlice []stringer             `xyzzy:"interfaceSlice"`
 		MapOfStructs   map[string]InnerStruct `xyzzy:"mapOfStructs, @tag=weezy"`
+		MapOfBools     map[string]bool        `xyzzy:"mapOfBools"`
 	}
 
 	InnerStruct struct {
@@ -129,6 +130,7 @@ var _ = Describe("Structomancer", func() {
 				"mapOfStructs": map[string]interface{}{
 					"some-key": map[string]interface{}{"foo": "xyzzy", "bar": []interface{}{5, 6, 7}},
 				},
+				"mapOfBools": map[string]interface{}{"one": true, "two": false},
 			}
 
 			specimens = []interface{}{
@@ -146,6 +148,7 @@ var _ = Describe("Structomancer", func() {
 					map[string]InnerStruct{
 						"some-key": {"xyzzy", []B{5, 6, 7}},
 					},
+					map[string]bool{"one": true, "two": false},
 				},
 				&Keith{
 					Name("keith richards"),
@@ -156,6 +159,7 @@ var _ = Describe("Structomancer", func() {
 					map[string]InnerStruct{
 						"some-key": {"xyzzy", []B{5, 6, 7}},
 					},
+					map[string]bool{"one": true, "two": false},
 				},
 			}
 
@@ -200,6 +204,7 @@ var _ = Describe("Structomancer", func() {
 					[]InnerStruct{InnerStruct{"xyzzy", []B{5, 6, 7}}},
 					[]stringer{InnerStruct{"xyzzy", []B{5, 6, 7}}},
 					map[string]InnerStruct{"some-key": {"xyzzy", []B{5, 6, 7}}},
+					map[string]bool{"one": true, "two": false},
 				},
 				&Keith{
 					Name("keith richards"),
@@ -208,6 +213,7 @@ var _ = Describe("Structomancer", func() {
 					[]InnerStruct{InnerStruct{"xyzzy", []B{5, 6, 7}}},
 					[]stringer{InnerStruct{"xyzzy", []B{5, 6, 7}}},
 					map[string]InnerStruct{"some-key": {"xyzzy", []B{5, 6, 7}}},
+					map[string]bool{"one": true, "two": false},
 				},
 			}
 
@@ -227,6 +233,7 @@ var _ = Describe("Structomancer", func() {
 				"mapOfStructs": map[string]interface{}{
 					"some-key": map[string]interface{}{"foo": "xyzzy", "bar": []interface{}{5, 6, 7}},
 				},
+				"mapOfBools": map[string]interface{}{"one": true, "two": false},
 			}
 
 			encodeInterfaceSlice = func(val interface{}) (interface{}, error) {
