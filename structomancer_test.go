@@ -13,13 +13,16 @@ const tagName = "xyzzy"
 
 type (
 	Keith struct {
-		Name           Name                   `xyzzy:"name"`
-		Age            Age                    `xyzzy:"age"`
-		InnerStruct    InnerStruct            `xyzzy:"inner, @tag=weezy"`
-		StructSlice    []InnerStruct          `xyzzy:"structSlice, @tag=weezy"`
-		InterfaceSlice []stringer             `xyzzy:"interfaceSlice"`
-		MapOfStructs   map[string]InnerStruct `xyzzy:"mapOfStructs, @tag=weezy"`
-		MapOfBools     map[string]bool        `xyzzy:"mapOfBools"`
+		Name                Name                   `xyzzy:"name"`
+		Age                 Age                    `xyzzy:"age"`
+		InnerStruct         InnerStruct            `xyzzy:"inner, @tag=weezy"`
+		StructSlice         []InnerStruct          `xyzzy:"structSlice, @tag=weezy"`
+		InterfaceSlice      []stringer             `xyzzy:"interfaceSlice"`
+		MapOfStructs        map[string]InnerStruct `xyzzy:"mapOfStructs, @tag=weezy"`
+		MapOfBools          map[string]bool        `xyzzy:"mapOfBools"`
+		NestedInlineStructs []struct {
+			Qaax string `weezy:"qaax"`
+		} `xyzzy:"nested, @tag=weezy"`
 	}
 
 	InnerStruct struct {
@@ -131,6 +134,10 @@ var _ = Describe("Structomancer", func() {
 					"some-key": map[string]interface{}{"foo": "xyzzy", "bar": []interface{}{5, 6, 7}},
 				},
 				"mapOfBools": map[string]interface{}{"one": true, "two": false},
+				"nested": []interface{}{
+					map[string]interface{}{"qaax": "one"},
+					map[string]interface{}{"qaax": "two"},
+				},
 			}
 
 			specimens = []interface{}{
@@ -149,6 +156,11 @@ var _ = Describe("Structomancer", func() {
 						"some-key": {"xyzzy", []B{5, 6, 7}},
 					},
 					map[string]bool{"one": true, "two": false},
+					[]struct {
+						Qaax string `weezy:"qaax"`
+					}{
+						{"one"}, {"two"},
+					},
 				},
 				&Keith{
 					Name("keith richards"),
@@ -160,6 +172,11 @@ var _ = Describe("Structomancer", func() {
 						"some-key": {"xyzzy", []B{5, 6, 7}},
 					},
 					map[string]bool{"one": true, "two": false},
+					[]struct {
+						Qaax string `weezy:"qaax"`
+					}{
+						{"one"}, {"two"},
+					},
 				},
 			}
 
@@ -205,6 +222,11 @@ var _ = Describe("Structomancer", func() {
 					[]stringer{InnerStruct{"xyzzy", []B{5, 6, 7}}},
 					map[string]InnerStruct{"some-key": {"xyzzy", []B{5, 6, 7}}},
 					map[string]bool{"one": true, "two": false},
+					[]struct {
+						Qaax string `weezy:"qaax"`
+					}{
+						{"one"}, {"two"},
+					},
 				},
 				&Keith{
 					Name("keith richards"),
@@ -214,6 +236,11 @@ var _ = Describe("Structomancer", func() {
 					[]stringer{InnerStruct{"xyzzy", []B{5, 6, 7}}},
 					map[string]InnerStruct{"some-key": {"xyzzy", []B{5, 6, 7}}},
 					map[string]bool{"one": true, "two": false},
+					[]struct {
+						Qaax string `weezy:"qaax"`
+					}{
+						{"one"}, {"two"},
+					},
 				},
 			}
 
@@ -234,6 +261,10 @@ var _ = Describe("Structomancer", func() {
 					"some-key": map[string]interface{}{"foo": "xyzzy", "bar": []interface{}{5, 6, 7}},
 				},
 				"mapOfBools": map[string]interface{}{"one": true, "two": false},
+				"nested": []interface{}{
+					map[string]interface{}{"qaax": "one"},
+					map[string]interface{}{"qaax": "two"},
+				},
 			}
 
 			encodeInterfaceSlice = func(val interface{}) (interface{}, error) {
@@ -260,6 +291,8 @@ var _ = Describe("Structomancer", func() {
 				if err != nil {
 					Fail(err.Error())
 				}
+
+				// Expect(k).To(Equal(expected))
 
 				Expect(k["name"]).To(Equal(expected["name"]))
 				Expect(k["age"]).To(Equal(expected["age"]))

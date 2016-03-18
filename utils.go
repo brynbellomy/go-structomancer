@@ -2,6 +2,7 @@ package structomancer
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 )
 
@@ -321,19 +322,56 @@ func FromNativeValue(nv reflect.Value, destType reflect.Type, subtag string) (v 
 		return array, nil
 
 	case reflect.Struct:
-		specimen := reflect.New(destType).Elem().Interface()
-		z := New(specimen, subtag)
+		z := NewWithType(destType, subtag)
 
-		m, ok := nv.Interface().(map[string]interface{})
-		if !ok {
-			return reflect.Value{}, errors.New("structomancer.FromNativeValue: cannot convert " + v.Type().String() + " to " + destType.String())
+		if nv.Kind() != reflect.Map {
+			return reflect.Value{}, errors.New("structomancer.FromNativeValue: cannot convert " + nv.Type().String() + " to " + destType.String())
 		}
 
-		val, err := z.MapToStruct(m)
-		if err != nil {
-			return reflect.Value{}, err
+		if m, ok := nv.Interface().(map[string]interface{}); ok {
+			val, err := z.MapToStruct(m)
+			if err != nil {
+				return reflect.Value{}, err
+			}
+			return reflect.ValueOf(val), nil
+
+		} else {
+			aStruct := z.MakeEmpty()
+			mapKeys := nv.MapKeys()
+			for i := 0; i < len(mapKeys); i++ {
+				mapKey := mapKeys[i]
+				if mapKey.Kind() == reflect.Interface {
+					// this strips any existing `interface{}` wrapper so we can see the real type
+					mapKey = reflect.ValueOf(mapKey.Interface())
+				}
+
+				if !mapKey.Type().ConvertibleTo(stringType) {
+					return reflect.Value{}, fmt.Errorf("structomancer.FromNativeValue: cannot deserialize struct from map with non-string keys (type = %v)", mapKey.Type().String())
+				}
+
+				fname := mapKey.Convert(stringType).Interface().(string)
+				if !z.IsKnownField(fname) {
+					continue
+				}
+
+				mapVal := nv.MapIndex(mapKey)
+				if !mapVal.IsValid() || IsZero(mapVal) {
+					continue
+				}
+
+				if mapVal.Kind() == reflect.Interface {
+					// this strips any existing `interface{}` wrapper so we can see the real type
+					mapVal = reflect.ValueOf(mapVal.Interface())
+				}
+
+				err := z.SetFieldValue(aStruct, fname, mapVal)
+				if err != nil {
+					return reflect.Value{}, err
+				}
+
+			}
+			return reflect.ValueOf(aStruct).Elem(), nil
 		}
-		return reflect.ValueOf(val), nil
 
 	case reflect.Map:
 		dest := reflect.MakeMap(destType)

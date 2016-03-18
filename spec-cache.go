@@ -26,8 +26,8 @@ func newSpecCache() *SpecCache {
 	}
 }
 
-func StructSpecForType(specimen interface{}, tagName string) (spec *StructSpec) {
-	t := EnsureStructOrStructPointerType(reflect.TypeOf(specimen))
+func structSpecForType(t reflect.Type, tagName string) (spec *StructSpec) {
+	t = EnsureStructOrStructPointerType(t)
 
 	key := SpecCacheKey{structType: t, tagName: tagName}
 

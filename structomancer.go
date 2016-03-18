@@ -17,9 +17,13 @@ type (
 )
 
 func New(specimen interface{}, tagName string) *Structomancer {
+	return NewWithType(reflect.TypeOf(specimen), tagName)
+}
+
+func NewWithType(t reflect.Type, tagName string) *Structomancer {
 	return &Structomancer{
 		tagName:       tagName,
-		StructSpec:    StructSpecForType(specimen, tagName),
+		StructSpec:    structSpecForType(t, tagName),
 		fieldEncoders: make(map[string]FieldCoderFunc),
 		fieldDecoders: make(map[string]FieldCoderFunc),
 	}
@@ -181,7 +185,6 @@ func (z *Structomancer) StructToMap(aStruct interface{}) (map[string]interface{}
 // Returns a struct created by deserializing the contents of `fields`.
 func (z *Structomancer) MapToStruct(fields map[string]interface{}) (interface{}, error) {
 	aStruct := z.MakeEmpty()
-	sv := reflect.ValueOf(aStruct)
 
 	for fname, mapVal := range fields {
 		if !z.IsKnownField(fname) {
@@ -190,13 +193,16 @@ func (z *Structomancer) MapToStruct(fields map[string]interface{}) (interface{},
 			continue
 		}
 
-		z.SetFieldValue(aStruct, fname, reflect.ValueOf(mapVal))
+		err := z.SetFieldValue(aStruct, fname, reflect.ValueOf(mapVal))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// if the structomancer's type is a struct, not a struct pointer, dereference the pointer so we
 	// return the right type
 	if IsStructType(z.Type()) {
-		return sv.Elem().Interface(), nil
+		return reflect.ValueOf(aStruct).Elem().Interface(), nil
 	} else {
 		return aStruct, nil
 	}
