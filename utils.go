@@ -64,7 +64,7 @@ func EnsureStructType(t reflect.Type) reflect.Type {
 	} else if IsStructPtrType(t) {
 		return t.Elem()
 	} else {
-		panic("Structomancer: unsupported type " + t.String())
+		panic("structomancer: unsupported type " + t.String())
 	}
 }
 
@@ -75,9 +75,9 @@ func EnsureStructValue(v reflect.Value) reflect.Value {
 		return v.Elem()
 	} else {
 		if v.IsValid() {
-			panic("Structomancer: unsupported type " + v.Type().String())
+			panic("structomancer: unsupported type " + v.Type().String())
 		} else {
-			panic("Structomancer: unsupported type: nil")
+			panic("structomancer: unsupported type: nil")
 		}
 	}
 }
@@ -86,7 +86,7 @@ func EnsureStructOrStructPointerType(t reflect.Type) reflect.Type {
 	if IsStructType(t) || IsStructPtrType(t) {
 		return t
 	} else {
-		panic("Structomancer: unsupported type " + t.String())
+		panic("structomancer: unsupported type " + t.String())
 	}
 }
 
@@ -95,9 +95,9 @@ func EnsureStructOrStructPointerValue(v reflect.Value) reflect.Value {
 		return v
 	} else {
 		if v.IsValid() {
-			panic("Structomancer: unsupported type " + v.Type().String())
+			panic("structomancer: unsupported type " + v.Type().String())
 		} else {
-			panic("Structomancer: unsupported type: nil")
+			panic("structomancer: unsupported type: nil")
 		}
 	}
 }
@@ -209,8 +209,8 @@ func ToNativeValue(v reflect.Value, subtag string) (nv reflect.Value, err error)
 		return reflect.ValueOf(dest), nil
 
 	case reflect.Struct:
-		z := New(v.Interface(), subtag)
-		m, err := z.StructToMap(v.Interface())
+		z := NewWithType(v.Type(), subtag)
+		m, err := z.StructToMapV(v)
 		if err != nil {
 			return reflect.Value{}, err
 		}
@@ -329,15 +329,17 @@ func FromNativeValue(nv reflect.Value, destType reflect.Type, subtag string) (v 
 		}
 
 		if m, ok := nv.Interface().(map[string]interface{}); ok {
-			val, err := z.MapToStruct(m)
+			val, err := z.MapToStructV(m)
 			if err != nil {
 				return reflect.Value{}, err
 			}
-			return reflect.ValueOf(val), nil
+			return val, nil
 
 		} else {
 			aStruct := z.MakeEmpty()
 			mapKeys := nv.MapKeys()
+			aStructVal := reflect.ValueOf(aStruct)
+
 			for i := 0; i < len(mapKeys); i++ {
 				mapKey := mapKeys[i]
 				if mapKey.Kind() == reflect.Interface {
@@ -364,13 +366,13 @@ func FromNativeValue(nv reflect.Value, destType reflect.Type, subtag string) (v 
 					mapVal = reflect.ValueOf(mapVal.Interface())
 				}
 
-				err := z.SetFieldValue(aStruct, fname, mapVal)
+				err := z.SetFieldValueV(aStructVal, fname, mapVal)
 				if err != nil {
 					return reflect.Value{}, err
 				}
 
 			}
-			return reflect.ValueOf(aStruct).Elem(), nil
+			return aStructVal.Elem(), nil
 		}
 
 	case reflect.Map:

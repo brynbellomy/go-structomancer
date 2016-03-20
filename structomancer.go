@@ -41,24 +41,36 @@ func (z *Structomancer) SetFieldDecoder(fname string, decoder FieldCoderFunc) {
 // is a struct or a pointer to a struct.  This method is appropriate for creating an instance that is
 // guaranteed to be addressable (see reflect.Value.CanAddr()).
 func (z *Structomancer) MakeEmpty() interface{} {
+	return z.MakeEmptyV().Interface()
+}
+
+// Returns a reflect.Value containing a pointer to a new, empty instance of the struct, regardless of
+// whether the struct type is a struct or a pointer to a struct.  This method is appropriate for
+// creating an instance that is guaranteed to be addressable (see reflect.Value.CanAddr()).
+func (z *Structomancer) MakeEmptyV() reflect.Value {
 	if z.Kind() == reflect.Ptr {
-		return reflect.New(z.Type().Elem()).Interface()
+		return reflect.New(z.Type().Elem())
 	} else {
-		return reflect.New(z.Type()).Interface()
+		return reflect.New(z.Type())
 	}
 }
 
+// If a field is marked as "-", it is considered "not known".  This function returns false for those
+// fields, and true for all others (including fields with no struct tag).
 func (z *Structomancer) IsKnownField(fname string) bool {
 	return z.Field(fname) != nil
 }
 
 func (z *Structomancer) GetFieldValue(aStruct interface{}, fnickname string) (reflect.Value, error) {
+	return z.GetFieldValueV(reflect.ValueOf(aStruct), fnickname)
+}
+
+func (z *Structomancer) GetFieldValueV(v reflect.Value, fnickname string) (reflect.Value, error) {
 	field := z.Field(fnickname)
 	if field == nil {
 		return reflect.Value{}, errors.New("structomancer.GetFieldValue: unknown field '" + fnickname + "'")
 	}
 
-	v := reflect.ValueOf(aStruct)
 	if v.Kind() == reflect.Ptr && (!v.Elem().IsValid() || v.IsNil()) {
 		return reflect.Value{}, errors.New("structomancer.GetFieldValue: aStruct argument cannot be nil")
 	}
@@ -102,14 +114,20 @@ func (z *Structomancer) GetFieldValue(aStruct interface{}, fnickname string) (re
 // Sets `field` to `value` in `aStruct`, converting the value if it is of a convertible type.  If it
 // is not convertible to the receiving field's type, this function returns an error.
 func (z *Structomancer) SetFieldValue(aStruct interface{}, fname string, value reflect.Value) error {
+	return z.SetFieldValueV(reflect.ValueOf(aStruct), fname, value)
+}
+
+// Sets `field` to `value` in the struct contained by `sv`, converting the value if it is of a
+// convertible type.  If it is not convertible to the receiving field's type, this function returns
+// an error.
+func (z *Structomancer) SetFieldValueV(sv reflect.Value, fname string, value reflect.Value) error {
 	field := z.Field(fname)
 	if field == nil {
 		return errors.New("structomancer.SetFieldValue: unknown field '" + fname + "'")
 	}
 
-	sv := reflect.ValueOf(aStruct)
 	if sv.Kind() == reflect.Ptr && (!sv.Elem().IsValid() || sv.IsNil()) {
-		return errors.New("structomancer.SetFieldValue: aStruct argument cannot be nil")
+		return errors.New("structomancer.SetFieldValue: struct argument cannot be nil")
 	}
 
 	var fieldVal reflect.Value
@@ -118,7 +136,7 @@ func (z *Structomancer) SetFieldValue(aStruct interface{}, fname string, value r
 	} else if IsStructValue(sv) {
 		fieldVal = sv.FieldByName(field.Name())
 	} else {
-		return errors.New("structomancer.GetFieldValue: Unsupported type '" + sv.Type().String() + "'")
+		return errors.New("structomancer.GetFieldValue: unsupported type '" + sv.Type().String() + "'")
 	}
 
 	if decode, ok := z.fieldDecoders[fname]; ok {
@@ -147,7 +165,15 @@ func (z *Structomancer) SetFieldValue(aStruct interface{}, fname string, value r
 	return nil
 }
 
+// Returns a map containing the contents of `aStruct`, taking into account the field tags defined for
+// the current `tagName`.
 func (z *Structomancer) StructToMap(aStruct interface{}) (map[string]interface{}, error) {
+	return z.StructToMapV(reflect.ValueOf(aStruct))
+}
+
+// Returns a reflect.Value containing a map containing the contents of `aStruct`, taking into account
+// the field tags defined for the current `tagName`.
+func (z *Structomancer) StructToMapV(aStruct reflect.Value) (map[string]interface{}, error) {
 	fieldMap := make(map[string]interface{})
 
 	for fname, field := range z.Fields() {
@@ -156,7 +182,7 @@ func (z *Structomancer) StructToMap(aStruct interface{}) (map[string]interface{}
 			continue
 		}
 
-		rval, err := z.GetFieldValue(aStruct, fname)
+		rval, err := z.GetFieldValueV(aStruct, fname)
 		if err != nil {
 			return nil, err
 		}
@@ -182,9 +208,19 @@ func (z *Structomancer) StructToMap(aStruct interface{}) (map[string]interface{}
 	return fieldMap, nil
 }
 
-// Returns a struct created by deserializing the contents of `fields`.
+// Returns a struct created by decoding the contents of `fields`.
 func (z *Structomancer) MapToStruct(fields map[string]interface{}) (interface{}, error) {
-	aStruct := z.MakeEmpty()
+	sv, err := z.MapToStructV(fields)
+	if err != nil {
+		return nil, err
+	}
+
+	return sv.Interface(), nil
+}
+
+// Returns a reflect.Value containing a struct created by decoding the contents of `fields`.
+func (z *Structomancer) MapToStructV(fields map[string]interface{}) (reflect.Value, error) {
+	aStruct := z.MakeEmptyV()
 
 	for fname, mapVal := range fields {
 		if !z.IsKnownField(fname) {
@@ -193,16 +229,16 @@ func (z *Structomancer) MapToStruct(fields map[string]interface{}) (interface{},
 			continue
 		}
 
-		err := z.SetFieldValue(aStruct, fname, reflect.ValueOf(mapVal))
+		err := z.SetFieldValueV(aStruct, fname, reflect.ValueOf(mapVal))
 		if err != nil {
-			return nil, err
+			return reflect.Value{}, err
 		}
 	}
 
 	// if the structomancer's type is a struct, not a struct pointer, dereference the pointer so we
 	// return the right type
 	if IsStructType(z.Type()) {
-		return reflect.ValueOf(aStruct).Elem().Interface(), nil
+		return aStruct.Elem(), nil
 	} else {
 		return aStruct, nil
 	}

@@ -19,7 +19,7 @@ type (
 		StructSlice         []InnerStruct          `xyzzy:"structSlice, @tag=weezy"`
 		InterfaceSlice      []stringer             `xyzzy:"interfaceSlice"`
 		MapOfStructs        map[string]InnerStruct `xyzzy:"mapOfStructs, @tag=weezy"`
-		MapOfBools          map[string]bool        `xyzzy:"mapOfBools"`
+		MapOfBools          map[Name]bool          `xyzzy:"mapOfBools"`
 		NestedInlineStructs []struct {
 			Qaax string `weezy:"qaax"`
 		} `xyzzy:"nested, @tag=weezy"`
@@ -155,7 +155,7 @@ var _ = Describe("Structomancer", func() {
 					map[string]InnerStruct{
 						"some-key": {"xyzzy", []B{5, 6, 7}},
 					},
-					map[string]bool{"one": true, "two": false},
+					map[Name]bool{"one": true, "two": false},
 					[]struct {
 						Qaax string `weezy:"qaax"`
 					}{
@@ -171,7 +171,7 @@ var _ = Describe("Structomancer", func() {
 					map[string]InnerStruct{
 						"some-key": {"xyzzy", []B{5, 6, 7}},
 					},
-					map[string]bool{"one": true, "two": false},
+					map[Name]bool{"one": true, "two": false},
 					[]struct {
 						Qaax string `weezy:"qaax"`
 					}{
@@ -221,7 +221,7 @@ var _ = Describe("Structomancer", func() {
 					[]InnerStruct{InnerStruct{"xyzzy", []B{5, 6, 7}}},
 					[]stringer{InnerStruct{"xyzzy", []B{5, 6, 7}}},
 					map[string]InnerStruct{"some-key": {"xyzzy", []B{5, 6, 7}}},
-					map[string]bool{"one": true, "two": false},
+					map[Name]bool{"one": true, "two": false},
 					[]struct {
 						Qaax string `weezy:"qaax"`
 					}{
@@ -235,7 +235,7 @@ var _ = Describe("Structomancer", func() {
 					[]InnerStruct{InnerStruct{"xyzzy", []B{5, 6, 7}}},
 					[]stringer{InnerStruct{"xyzzy", []B{5, 6, 7}}},
 					map[string]InnerStruct{"some-key": {"xyzzy", []B{5, 6, 7}}},
-					map[string]bool{"one": true, "two": false},
+					map[Name]bool{"one": true, "two": false},
 					[]struct {
 						Qaax string `weezy:"qaax"`
 					}{
