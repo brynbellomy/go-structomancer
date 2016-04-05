@@ -15,7 +15,7 @@ type (
 	tagParts []string
 )
 
-func NewTag(field reflect.StructField, tagName string) tag {
+func newTag(field reflect.StructField, tagName string) tag {
 	parts := strings.Split(field.Tag.Get(tagName), ",")
 
 	// ignore spaces — they can be helpful for readability

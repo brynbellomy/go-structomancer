@@ -34,7 +34,7 @@ func newFieldSpec(field reflect.StructField, tagName string) *FieldSpec {
 		rType: field.Type,
 		rKind: field.Type.Kind(),
 		index: field.Index,
-		tag:   NewTag(field, tagName),
+		tag:   newTag(field, tagName),
 	}
 }
 
