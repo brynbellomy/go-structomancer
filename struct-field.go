@@ -5,7 +5,7 @@ import "reflect"
 type (
 	FieldSpec struct {
 		name  string
-		tag   Tag
+		tag   tag
 		index []int
 		rType reflect.Type
 		rKind reflect.Kind
@@ -63,7 +63,7 @@ func (f *FieldSpec) TagName() string {
 }
 
 func (f *FieldSpec) Nickname() string {
-	return f.tag.FieldName()
+	return f.tag.Nickname()
 }
 
 func (f *FieldSpec) IsFlagged(flag string) bool {
