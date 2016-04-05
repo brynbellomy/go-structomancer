@@ -7,7 +7,7 @@ import (
 
 type (
 	Structomancer struct {
-		*StructSpec
+		*structSpec
 		tagName string
 
 		fieldEncoders, fieldDecoders map[string]FieldCoderFunc
@@ -23,16 +23,18 @@ func New(specimen interface{}, tagName string) *Structomancer {
 func NewWithType(t reflect.Type, tagName string) *Structomancer {
 	return &Structomancer{
 		tagName:       tagName,
-		StructSpec:    structSpecForType(t, tagName),
+		structSpec:    structSpecForType(t, tagName),
 		fieldEncoders: make(map[string]FieldCoderFunc),
 		fieldDecoders: make(map[string]FieldCoderFunc),
 	}
 }
 
+// Sets the function used to encode the given field to a native Go value.
 func (z *Structomancer) SetFieldEncoder(fname string, encoder FieldCoderFunc) {
 	z.fieldEncoders[fname] = encoder
 }
 
+// Sets the function used to decode the given field from a native Go value.
 func (z *Structomancer) SetFieldDecoder(fname string, decoder FieldCoderFunc) {
 	z.fieldDecoders[fname] = decoder
 }
@@ -61,6 +63,7 @@ func (z *Structomancer) IsKnownField(fname string) bool {
 	return z.Field(fname) != nil
 }
 
+// Returns the value of the struct field with the given nickname.
 func (z *Structomancer) GetFieldValue(aStruct interface{}, fnickname string) (interface{}, error) {
 	fv, err := z.GetFieldValueV(reflect.ValueOf(aStruct), fnickname)
 	if err != nil {
@@ -69,6 +72,7 @@ func (z *Structomancer) GetFieldValue(aStruct interface{}, fnickname string) (in
 	return fv.Interface(), nil
 }
 
+// Returns a reflect.Value containing the value of the struct field with the given nickname.
 func (z *Structomancer) GetFieldValueV(v reflect.Value, fnickname string) (reflect.Value, error) {
 	field := z.Field(fnickname)
 	if field == nil {

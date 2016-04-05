@@ -6,43 +6,45 @@ import (
 )
 
 type (
-	SpecCache struct {
+	specCache struct {
 		sync.RWMutex
-		specs map[SpecCacheKey]*StructSpec
+		specs map[specCacheKey]*structSpec
 	}
 
-	SpecCacheKey struct {
+	specCacheKey struct {
 		tagName    string
 		structType reflect.Type
 	}
 )
 
-var specCache = newSpecCache()
+var cache = newSpecCache()
 
-func newSpecCache() *SpecCache {
-	return &SpecCache{
+func newSpecCache() *specCache {
+	return &specCache{
 		RWMutex: sync.RWMutex{},
-		specs:   make(map[SpecCacheKey]*StructSpec),
+		specs:   make(map[specCacheKey]*structSpec),
 	}
 }
 
-func structSpecForType(t reflect.Type, tagName string) (spec *StructSpec) {
-	t = EnsureStructOrStructPointerType(t)
+func structSpecForType(t reflect.Type, tagName string) (spec *structSpec) {
+	if !(IsStructType(t) || IsStructPtrType(t)) {
+		panic("structomancer: unsupported type " + t.String())
+	}
 
-	key := SpecCacheKey{structType: t, tagName: tagName}
+	key := specCacheKey{structType: t, tagName: tagName}
 
-	specCache.RLock()
-	spec, found := specCache.specs[key]
-	specCache.RUnlock()
+	cache.RLock()
+	spec, found := cache.specs[key]
+	cache.RUnlock()
 
 	if found {
 		return
 	}
 
-	specCache.Lock()
-	spec = NewStructSpec(t, tagName)
-	specCache.specs[key] = spec
-	specCache.Unlock()
+	cache.Lock()
+	spec = newStructSpec(t, tagName)
+	cache.specs[key] = spec
+	cache.Unlock()
 
 	return
 }
