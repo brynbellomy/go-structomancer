@@ -1,6 +1,9 @@
 package structomancer
 
-import "reflect"
+import (
+	"reflect"
+	"strings"
+)
 
 type (
 	structSpec struct {
@@ -31,7 +34,7 @@ func newStructSpec(t reflect.Type, tagName string) *structSpec {
 		field := st.Field(i)
 
 		// skip fields marked with "-", just like the json package
-		if tag := field.Tag.Get(tagName); tag == "-" {
+		if tag := field.Tag.Get(tagName); strings.HasPrefix(tag, "-") {
 			continue
 		}
 		fields = append(fields, field)
