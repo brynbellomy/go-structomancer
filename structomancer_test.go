@@ -55,7 +55,7 @@ var _ = Describe("Structomancer", func() {
 				Fail(err.Error())
 			}
 
-			Expect(fv.Interface()).To(Equal("keith"))
+			Expect(fv).To(Equal("keith"))
 		})
 
 		Context("with a nil struct argument", func() {
@@ -80,7 +80,7 @@ var _ = Describe("Structomancer", func() {
 			z := structomancer.New(&Keith{}, "xyzzy")
 			x := &Keith{}
 
-			err := z.SetFieldValue(x, "name", reflect.ValueOf("keith"))
+			err := z.SetFieldValue(x, "name", "keith")
 			if err != nil {
 				Fail(err.Error())
 			}

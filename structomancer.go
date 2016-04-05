@@ -61,8 +61,12 @@ func (z *Structomancer) IsKnownField(fname string) bool {
 	return z.Field(fname) != nil
 }
 
-func (z *Structomancer) GetFieldValue(aStruct interface{}, fnickname string) (reflect.Value, error) {
-	return z.GetFieldValueV(reflect.ValueOf(aStruct), fnickname)
+func (z *Structomancer) GetFieldValue(aStruct interface{}, fnickname string) (interface{}, error) {
+	fv, err := z.GetFieldValueV(reflect.ValueOf(aStruct), fnickname)
+	if err != nil {
+		return nil, err
+	}
+	return fv.Interface(), nil
 }
 
 func (z *Structomancer) GetFieldValueV(v reflect.Value, fnickname string) (reflect.Value, error) {
@@ -113,8 +117,8 @@ func (z *Structomancer) GetFieldValueV(v reflect.Value, fnickname string) (refle
 
 // Sets `field` to `value` in `aStruct`, converting the value if it is of a convertible type.  If it
 // is not convertible to the receiving field's type, this function returns an error.
-func (z *Structomancer) SetFieldValue(aStruct interface{}, fname string, value reflect.Value) error {
-	return z.SetFieldValueV(reflect.ValueOf(aStruct), fname, value)
+func (z *Structomancer) SetFieldValue(aStruct interface{}, fname string, value interface{}) error {
+	return z.SetFieldValueV(reflect.ValueOf(aStruct), fname, reflect.ValueOf(value))
 }
 
 // Sets `field` to `value` in the struct contained by `sv`, converting the value if it is of a
