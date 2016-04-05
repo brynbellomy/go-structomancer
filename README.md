@@ -2,7 +2,13 @@
 # structomancer
 
 Golang struct reflection package.  Primarily aimed at package authors who want to add struct tag
-functionality and/or serialization and deserialization to their packages.
+functionality and/or struct serialization and deserialization to their packages.
+
+## fast
+
+structomancer is pretty fast.  A lot of the reflection calls it makes are only performed once per type, and are fetched from a `sync.RWMutex`-protected cache on subsequent lookups.
+
+## what you can do
 
 ```go
 import "github.com/brynbellomy/go-structomancer"
@@ -42,28 +48,31 @@ func main() {
     })
 
     //
-    // generate empty instances of a type
+    // generate empty, addressable instances of a type
     //
-    x := z.MakeEmpty() // returns a &Blah{}
+    x := z.MakeEmpty()                           // returns a &Blah{}
+    structomancer.New(Blah{}, "api").MakeEmpty() // also returns a &Blah
 
     //
-    // examine individual fields
+    // validate fields based on struct tags
     //
-    z.IsKnownField("inner") // returns true
-    z.IsKnownField("sessionID") // returns false
+    z.IsKnownField("inner")        // returns true
+    z.IsKnownField("sessionID")    // returns false
 
+    //
+    // get field values
+    //
     blah := &Blah{Name: "foobar"}
-    z.GetFieldValue(blah, "name")  // returns a reflect.Value containing "foobar"
+    v, err := z.GetFieldValue(blah, "name")  // returns "foobar", nil
 
-    z.SetField(blah, "name", "quux")
-
-    // you can .ConvertSetField if the type is a type alias
-    type PersonName string
-    z.ConvertSetField(blah, "name", PersonName("quux"))
-
-
+    //
+    // set field values
+    //
+    err := z.SetFieldValue(blah, "name", "qaax")
 }
 ```
+
+## custom decoding/encoding
 
 You might find that you need to set up custom serializer/deserializer functions for individual fields (for example, fields with interface types, which cannot be automatically deserialized by structomancer).
 
@@ -96,3 +105,26 @@ func main() {
     z.MapToStruct(...)
 }
 ```
+
+
+## `reflect` package compatibility
+
+If you're working with lots of `reflect.Value`s already, you probably want to avoid creating even more of them (reflection is apparently expensive because of allocations, although I forget where I read that).
+
+To avoid unnecessary boxing/unboxing of your values, you can access all of structomancer's methods via an alternate `reflect.Value`-compatible interface:
+
+```go
+.MakeEmptyV() reflect.Value
+.GetFieldValueV(v reflect.Value, fnickname string) (reflect.Value, error)
+.SetFieldValueV(sv reflect.Value, fname string, value reflect.Value) error
+.StructToMapV(aStruct reflect.Value) (map[string]interface{}, error)
+.MapToStructV(fields map[string]interface{}) (reflect.Value, error)
+```
+
+Should be substantially faster, but I haven't profiled it yet.
+
+
+# authors/contributors
+
+- bryn bellomy (<bryn.bellomy@gmail.com>)
+
