@@ -7,11 +7,12 @@ import (
 
 type (
 	structSpec struct {
-		rType      reflect.Type
-		rKind      reflect.Kind
-		tagName    string
-		fields     map[string]*FieldSpec
-		fieldNames []string // cached
+		rType          reflect.Type
+		rKind          reflect.Kind
+		tagName        string
+		fields         map[string]*FieldSpec
+		fieldsByGoName map[string]*FieldSpec
+		fieldNames     []string // cached
 	}
 )
 
@@ -41,19 +42,22 @@ func newStructSpec(t reflect.Type, tagName string) *structSpec {
 	}
 
 	fieldMap := make(map[string]*FieldSpec, len(fields))
+	fieldsByGoName := make(map[string]*FieldSpec, len(fields))
 	fieldNames := make([]string, len(fields))
 	for i, field := range fields {
 		fSpec := newFieldSpec(field, tagName)
 		fieldMap[fSpec.Nickname()] = fSpec
+		fieldsByGoName[fSpec.Name()] = fSpec
 		fieldNames[i] = fSpec.Nickname()
 	}
 
 	return &structSpec{
-		rType:      t,
-		rKind:      t.Kind(),
-		tagName:    tagName,
-		fields:     fieldMap,
-		fieldNames: fieldNames,
+		rType:          t,
+		rKind:          t.Kind(),
+		tagName:        tagName,
+		fields:         fieldMap,
+		fieldNames:     fieldNames,
+		fieldsByGoName: fieldsByGoName,
 	}
 }
 
@@ -76,6 +80,14 @@ func (s *structSpec) Fields() map[string]*FieldSpec {
 // Returns a *FieldSpec object representing the given field, or nil if one was not found.
 func (s *structSpec) Field(sFieldName string) *FieldSpec {
 	if f, exists := s.Fields()[sFieldName]; exists {
+		return f
+	} else {
+		return nil
+	}
+}
+
+func (s *structSpec) FieldByGoName(fname string) *FieldSpec {
+	if f, exists := s.fieldsByGoName[fname]; exists {
 		return f
 	} else {
 		return nil
