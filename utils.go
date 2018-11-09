@@ -341,7 +341,7 @@ func FromNativeValue(nv reflect.Value, destType reflect.Type, subtag string) (v 
 		if !nv.IsValid() || nv.IsNil() {
 			return nv, nil
 		}
-		innerVal, err := FromNativeValue(nv, destType.Elem(), subtag)
+		innerVal, err := FromNativeValue(nv.Elem(), destType.Elem(), subtag)
 		if err != nil {
 			return reflect.Value{}, err
 		}
