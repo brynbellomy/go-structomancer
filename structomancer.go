@@ -101,20 +101,6 @@ func (z *Structomancer) GetFieldValueV(v reflect.Value, fnickname string) (refle
 			return reflect.Value{}, errors.New("structomancer.GetFieldValue: error calling user encoder: " + err.Error())
 		}
 		fieldVal = reflect.ValueOf(fv)
-
-	} else {
-		var subtag string
-		if sub, isDefined := field.FlagValue("@tag"); isDefined {
-			subtag = sub
-		} else {
-			subtag = z.tagName
-		}
-
-		var err error
-		fieldVal, err = ToNativeValue(fieldVal, subtag)
-		if err != nil {
-			return reflect.Value{}, errors.New("structomancer.GetFieldValue: " + err.Error())
-		}
 	}
 
 	return fieldVal, nil
