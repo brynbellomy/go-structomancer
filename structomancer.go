@@ -1,8 +1,9 @@
 package structomancer
 
 import (
-	"errors"
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -171,6 +172,26 @@ func (z *Structomancer) SetFieldValueV(sv reflect.Value, fname string, value ref
 
 	fieldVal.Set(value)
 	return nil
+}
+
+func (z *Structomancer) PointerToField(aStruct interface{}, fieldName string) (interface{}, error) {
+	v, err := z.PointerToFieldV(reflect.ValueOf(aStruct), fieldName)
+	if err != nil {
+		return nil, err
+	}
+	return v.Interface(), nil
+}
+
+func (z *Structomancer) PointerToFieldV(aStruct reflect.Value, fieldName string) (reflect.Value, error) {
+	if !z.IsKnownField(fieldName) {
+		return reflect.Value{}, errors.Errorf("unknown struct field: %v", fieldName)
+	}
+	realName := z.Field(fieldName).Name()
+
+	if z.Kind() == reflect.Ptr {
+		return aStruct.Elem().FieldByName(realName).Addr(), nil
+	}
+	return aStruct.FieldByName(realName).Addr(), nil
 }
 
 // Returns a map containing the contents of `aStruct`, taking into account the field tags defined for
